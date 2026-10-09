@@ -1,181 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fireworks ✨</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💖</text></svg>">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat+Alternates:wght@300&display=swap" rel="stylesheet">
-    <style>
-        body {
-            cursor: default;
-            font-family: 'Montserrat Alternates', sans-serif;
-            font-weight: 300;
-        }
-
-        #text-container {
-            transition: transform 0.1s ease-out;
-            will-change: transform;
-        }
-        
-        #main-title {
-            font-family: 'Great Vibes', cursive;
-        }
-
-        .text-gradient {
-            background: linear-gradient(45deg, #f9a8d4, #f472b6, #ec4899, #db2777);
-            background-size: 200% 200%;
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            animation: gradient-animation 10s ease infinite;
-        }
-
-        @keyframes gradient-animation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        #text-container span {
-            display: inline-block;
-            cursor: pointer;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), color 0.3s ease, filter 0.3s ease;
-            will-change: transform, color, filter;
-        }
-
-        #text-container span:hover {
-            transform: translateY(-6px) scale(1.05);
-            color: #fff;
-            filter: brightness(1.5);
-        }
-
-        /* Mobile specific styles */
-        @media (max-width: 768px) {
-            #text-container {
-                /* Center text on mobile */
-                top: 4rem;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 90%;
-                text-align: center;
-                transition: none;
-            }
-            #main-title {
-                font-size: 3.25rem; /* Slightly smaller on mobile */
-            }
-            #subtitle {
-                font-size: 1.1rem; /* Slightly smaller on mobile */
-            }
-            #more-fireworks-btn {
-                padding: 0.75rem 1.25rem; /* A bit smaller on mobile */
-            }
-        }
-    </style>
-</head>
-<body class="bg-black text-white overflow-hidden">
-    
-    <canvas id="fireworks-canvas" class="fixed top-0 left-0 w-full h-full z-0"></canvas>
-    
-    <div id="text-container" class="absolute top-8 left-8 z-10">
-        <h1 id="main-title" class="text-5xl sm:text-6xl md:text-7xl font-bold mb-4 text-gradient"></h1>
-        <p id="subtitle" class="text-lg sm:text-xl md:text-2xl font-light text-pink-200"></p>
-    </div>
-
-    <div class="fixed bottom-8 left-1/2 -translate-x-1/2 md:bottom-10 md:right-10 md:left-auto md:translate-x-0 z-20">
-        <button id="more-fireworks-btn" class="bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white font-bold py-3 px-6 rounded-full shadow-lg hover:scale-105 active:scale-95 transform transition-transform duration-300 flex items-center gap-2" aria-label="Launch more fireworks">
-            <span role="img" aria-hidden="true">🎆</span> More Fireworks
-        </button>
-    </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const canvas = document.getElementById('fireworks-canvas');
-            if (!canvas) return;
-
-            const ctx = canvas.getContext('2d');
-            let fireworks = [];
-            let particles = [];
-            let fireworksInterval;
-            const isMobile = window.innerWidth < 768;
-
-            const resizeCanvas = () => {
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
-            };
-
-            const getRandomStartX = () => {
-                if (Math.random() < 0.5) {
-                    return (Math.random() * 0.3 + 0.1) * canvas.width;
-                } else {
-                    return (Math.random() * 0.3 + 0.6) * canvas.width;
-                }
-            };
-
-            class Particle {
-                constructor(x, y, hue, angle, speed) {
-                    this.x = x;
-                    this.y = y;
-                    this.coordinates = Array(5).fill([x, y]);
-                    this.angle = angle;
-                    this.speed = speed;
-                    this.friction = 0.96;
-                    this.gravity = 1.0;
-                    this.hue = (hue + (Math.random() * 40 - 20) + 360) % 360;
-                    this.brightness = Math.random() * 30 + 50;
-                    this.alpha = 1;
-                    this.decay = Math.random() * 0.015 + 0.01;
-                    this.size = Math.random() * 2 + 1;
-                }
-
-                update() {
-                    this.coordinates.pop();
-                    this.coordinates.unshift([this.x, this.y]);
-                    this.speed *= this.friction;
-                    this.x += Math.cos(this.angle) * this.speed;
-                    this.y += Math.sin(this.angle) * this.speed + this.gravity;
-                    this.alpha -= this.decay;
-                }
-
-                draw() {
-                    ctx.save();
-                    ctx.globalAlpha = this.alpha;
-                    ctx.beginPath();
-                    const startPoint = this.coordinates[this.coordinates.length - 1];
-                    ctx.moveTo(startPoint[0], startPoint[1]);
-                    ctx.lineTo(this.x, this.y);
-                    const color = `hsl(${this.hue}, 100%, ${this.brightness}%)`;
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = this.size;
-                    ctx.lineCap = 'round';
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            }
-
-            class Firework {
-                constructor(x, y, targetY) {
-                    this.x = x;
-                    this.y = y;
-                    this.targetY = targetY;
-                    this.coordinates = Array(5).fill([x, y]);
-                    this.speed = Math.random() * 7 + 8;
-                    this.acceleration = 0.98;
-                    this.brightness = Math.random() * 35 + 50;
-                    
-                    // Pink/girly color palette
-                    const colors = [300, 320, 330, 350, 280, 50, 0]; // Pinks, Magentas, Purples, Gold, Red
-                    this.hue = colors[Math.floor(Math.random() * colors.length)];
-                    
-                    this.size = Math.random() < 0.2 ? 'large' : 'normal'; // 20% chance of a large firework
-                    
-                    const patternChance = Math.random();
-                    if (patternChance < 0.25) this.pattern = 'heart';
-                    else if (patternChance < 0.5) this.pattern = 'circle';
-                    else this.pattern = 'default';
                 }
 
                 update() {
@@ -186,17 +8,7 @@
                 }
 
                 draw() {
-                    ctx.save();
-                    ctx.beginPath();
-                    const startPoint = this.coordinates[this.coordinates.length - 1];
-                    ctx.moveTo(startPoint[0], startPoint[1]);
-                    ctx.lineTo(this.x, this.y);
-                    const color = `hsl(${this.hue}, 100%, ${this.brightness}%)`;
-                    ctx.strokeStyle = color;
-                    ctx.lineWidth = 3;
-                    ctx.lineCap = 'round';
-                    ctx.stroke();
-                    ctx.restore();
+                    drawTrail(this.coordinates[this.coordinates.length - 1], this.x, this.y, this.hue, this.brightness, 3);
                 }
             }
             
@@ -205,7 +17,9 @@
                 if (firework.size === 'large') {
                     baseParticleCount *= isMobile ? 1.5 : 2;
                 }
-                const particleCount = Math.floor(baseParticleCount);
+                // Cap the total so rapid clicking can't tank the frame rate
+                const particleCount = Math.min(Math.floor(baseParticleCount), MAX_PARTICLES - particles.length);
+                if (particleCount <= 0) return;
                 
                 switch (firework.pattern) {
                     case 'circle':
@@ -217,7 +31,7 @@
                         }
                         break;
                     case 'heart':
-                         const heartScale = isMobile ? 0.7 : 0.9 * (firework.size === 'large' ? 1.4 : 1);
+                         const heartScale = (isMobile ? 0.7 : 0.9) * (firework.size === 'large' ? 1.4 : 1);
                          for (let i = 0; i < particleCount; i++) {
                             const t = (i / particleCount) * Math.PI * 2;
                             const x_ = heartScale * 16 * Math.pow(Math.sin(t), 3);
@@ -243,8 +57,8 @@
                 for (let i = 0; i < count; i++) {
                     setTimeout(() => {
                         const startX = getRandomStartX();
-                        const targetY = Math.random() * (canvas.height * 0.2) + (canvas.height * 0.1);
-                        fireworks.push(new Firework(startX, canvas.height, targetY));
+                        const targetY = Math.random() * (height * 0.2) + (height * 0.1);
+                        fireworks.push(new Firework(startX, height, targetY));
                     }, i * (150 + Math.random() * 150));
                 }
             };
@@ -253,7 +67,7 @@
                 requestAnimationFrame(animate);
                 ctx.globalCompositeOperation = 'destination-out';
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillRect(0, 0, width, height);
                 ctx.globalCompositeOperation = 'lighter';
 
                 fireworks = fireworks.filter(firework => {
@@ -286,15 +100,26 @@
                 document.getElementById('main-title').textContent = title;
                 document.getElementById('subtitle').textContent = subtitle;
 
+                // Wrap each letter in a span for the hover effect. Letters are grouped per
+                // word so lines only break between words, and the element keeps an
+                // aria-label so screen readers read the whole phrase.
                 const wrapTextInSpans = (elementId) => {
                     const element = document.getElementById(elementId);
                     if (!element) return;
                     const text = element.textContent.trim();
-                    element.innerHTML = '';
-                    text.split('').forEach(char => {
-                        const span = document.createElement('span');
-                        span.innerHTML = char === ' ' ? '&nbsp;' : char;
-                        element.appendChild(span);
+                    element.textContent = '';
+                    element.setAttribute('aria-label', text);
+                    text.split(' ').forEach((word, i) => {
+                        if (i > 0) element.appendChild(document.createTextNode(' '));
+                        const wordEl = document.createElement('span');
+                        wordEl.className = 'word';
+                        wordEl.setAttribute('aria-hidden', 'true');
+                        word.split('').forEach(char => {
+                            const span = document.createElement('span');
+                            span.textContent = char;
+                            wordEl.appendChild(span);
+                        });
+                        element.appendChild(wordEl);
                     });
                 };
 
@@ -302,8 +127,13 @@
                 wrapTextInSpans('subtitle');
 
                 const textContainer = document.getElementById('text-container');
-                if (textContainer && window.matchMedia('(pointer: fine)').matches) {
+                if (textContainer && !reducedMotion && window.matchMedia('(pointer: fine)').matches) {
                     document.addEventListener('mousemove', (e) => {
+                        // Narrow layouts center the text with a CSS transform; don't override it
+                        if (isMobile) {
+                            textContainer.style.transform = '';
+                            return;
+                        }
                         const { clientX, clientY } = e;
                         const { innerWidth, innerHeight } = window;
                         const moveX = (clientX / innerWidth - 0.5) * 40;
@@ -313,30 +143,38 @@
                 }
             };
 
-            const startShow = () => {
-                resizeCanvas();
-                animate();
-                launchFireworksBurst(isMobile ? 3 : 6);
-
-                const intervalTime = isMobile ? 1500 + Math.random() * 500 : 800 + Math.random() * 400;
-
-                fireworksInterval = window.setInterval(() => {
+            const startAutoLaunch = () => {
+                clearInterval(fireworksInterval);
+                // Reduced motion: slower automatic show, manual launches still work
+                const baseTime = isMobile ? 1500 + Math.random() * 500 : 800 + Math.random() * 400;
+                const intervalTime = reducedMotion ? baseTime * 3 : baseTime;
+                fireworksInterval = setInterval(() => {
                     const count = 1 + Math.floor(Math.random() * (isMobile ? 2 : 3));
                     launchFireworksBurst(count);
                 }, intervalTime);
             };
 
+            const startShow = () => {
+                resizeCanvas();
+                animate();
+                launchFireworksBurst(isMobile ? 3 : 6);
+                startAutoLaunch();
+            };
+
+            const launchOnDemand = () => launchFireworksBurst(1 + Math.floor(Math.random() * 2));
+
             // Event Listeners
             window.addEventListener('resize', resizeCanvas);
-            document.getElementById('more-fireworks-btn').addEventListener('click', () => {
-                const count = 1 + Math.floor(Math.random() * 2);
-                launchFireworksBurst(count);
+            // Pause auto-launching in background tabs so bursts don't pile up
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden) clearInterval(fireworksInterval);
+                else startAutoLaunch();
             });
+            document.getElementById('more-fireworks-btn').addEventListener('click', launchOnDemand);
             document.addEventListener('keydown', (e) => {
-                if (e.code === 'Space') {
+                if (e.code === 'Space' && !e.repeat) {
                     e.preventDefault();
-                    const count = 1 + Math.floor(Math.random() * 2);
-                    launchFireworksBurst(count);
+                    launchOnDemand();
                 }
             });
 
